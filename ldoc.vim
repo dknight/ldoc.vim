@@ -163,7 +163,7 @@ function! <SID>ldoc_functionComment()
 		let l:str = g:ldoc_startFlagCommentTag . g:ldoc_flagParam . l:ele
 		let l:paramDesc = input("Argument [" . l:ele . "] description: ")
 		if(strlen(l:paramDesc) > 0)
-			let l:str = l:str . "\t" . l:paramDesc
+			let l:str = l:str . " " . l:paramDesc
 		endif
 		call add(l:writeText, l:str)
 	endfor
