@@ -1,7 +1,8 @@
 " http://vimdoc.sourceforge.net/htmldoc/usr_41.html
+" xdkn1ght (http://www.whoop.ee)
 
 """""""""""""""""""""""""""""
-" 工具函数
+" Utility functions.
 """""""""""""""""""""""""""""
 function! s:warnMsg(msg)
 	echohl WarningMsg
@@ -9,15 +10,15 @@ function! s:warnMsg(msg)
 	echohl None
 endfunction
 
-" 插件重复性加载的冲突检测
+" Conflict detection for loading of this plug-in
 if exists("loaded_ldoc_ddc")
-	call s:warnMsg("Ldoc Already Loaded!")
+	call s:warnMsg("Ldoc already loaded!")
 	finish
 endif
 let loaded_ldoc_ddc = 1
 
 """""""""""""""""""""""""""""
-" 全局注释变量
+" Global variables.
 """""""""""""""""""""""""""""
 if !exists("g:ldoc_startBeginCommentTag")
 	let g:ldoc_startBeginCommentTag = "----------------------------------------"
@@ -34,7 +35,7 @@ endif
 
 
 """""""""""""""""""""""""""""
-" 全局标记状态变量
+" Global flag variables.
 """""""""""""""""""""""""""""
 if !exists("g:ldoc_flagAuthor")
 	let g:ldoc_flagAuthor = "@author "
@@ -50,8 +51,9 @@ if !exists("g:ldoc_flagReturn")
 endif
 
 """""""""""""""""""""""""""""
-" 写入函数
-" 详细参见append函数,参数2可直接传入列表
+" Write functions.
+" See `append` function for details, parameter 2 can be passed directly 
+" into the arguments' list.
 """""""""""""""""""""""""""""
 function! s:writeToNextLine(str)
 	call append(line("."), a:str)
@@ -61,18 +63,18 @@ function! s:writeToPrevLine(str)
 endfunction
 
 """""""""""""""""""""""""""""
-" 模块的注释
+" Module ldoc comments.
 """""""""""""""""""""""""""""
 function! <SID>ldoc_moduleComment()
 	if !exists("g:ldoc_authorName")
-		let g:ldoc_authorName = input("输入作者名(忽略将使用当前用户名):")
+		let g:ldoc_authorName = input("Enter the author's name (default `whoami`): ")
 	endif
 	if(strlen(g:ldoc_authorName) == 0)
 		let l:whoami = system("whoami")
 		let g:ldoc_authorName = substitute(l:whoami, '\n', "", "")
 		echo g:ldoc_authorName
 	endif
-	let l:moduleDesc = input("输入模块的简单说明(可直接回车,稍后填写):")
+	let l:moduleDesc = input("Description of the module: ")
 	mark l
 	let l:writeText = [g:ldoc_startBeginCommentTag]
 	let l:markJump = 0
@@ -94,17 +96,17 @@ function! <SID>ldoc_moduleComment()
 endfunction
 
 """""""""""""""""""""""""""""
-" 类型的注释
+" Type ldoc comments.
 """""""""""""""""""""""""""""
 function! <SID>ldoc_typeComment()
 	let l:curLineStr = getline(line("."))
 	let l:typeNameList = matchlist(l:curLineStr, 'local[ \t]\+\([a-zA-Z0-9_]\+\)[ \t]\+')
 	if(len(l:typeNameList) < 2)
-		call s:warnMsg("获取type失败,call jncpp@qq.com")
+		call s:warnMsg("Failed to get type")
 		return
 	endif
 	let l:typeName = l:typeNameList[1]
-	let l:typeDesc = input("输入类型的简单说明(可直接回车,稍后填写):")
+	let l:typeDesc = input("Description of the input type: ")
 	mark l
 	let l:writeText = []
 	let l:markJump = 0
@@ -125,7 +127,7 @@ function! <SID>ldoc_typeComment()
 endfunction
 
 """""""""""""""""""""""""""""
-" 函数的注释
+" Function ldoc comments.
 """""""""""""""""""""""""""""
 function! <SID>ldoc_functionComment()
 	let l:curLineStr = getline(line("."))
@@ -134,7 +136,7 @@ function! <SID>ldoc_functionComment()
 	else
 		let l:paramList = matchlist(l:curLineStr, '\([a-zA-Z0-9_]\+\)[ \t]*=[ \t]*function[ \t]*(\([a-zA-Z0-9_, \t\.]*\))')
 		if(len(l:paramList) < 2)
-			call s:warnMsg("获取函数失败,call jncpp@qq.com")
+			call s:warnMsg("Failed to get the function")
 			return
 		endif
 	endif
@@ -147,7 +149,7 @@ function! <SID>ldoc_functionComment()
 		endfor
 	endif
 	mark l
-	let l:funcDesc = input("输入函数[" . l:funcName . "]的简单说明(可直接回车,稍后填写):")
+	let l:funcDesc = input("Function [" . l:funcName . "] description: ")
 	let l:writeText = []
 	let l:str = g:ldoc_startNoteCommentTag
 	let l:markJump = 0
@@ -159,12 +161,15 @@ function! <SID>ldoc_functionComment()
 	call add(l:writeText, l:str)
 	for l:ele in l:paramList2
 		let l:str = g:ldoc_startFlagCommentTag . g:ldoc_flagParam . l:ele
-		let l:paramDesc = input("输入参数[" . l:ele . "]的简单说明:")
+		let l:paramDesc = input("Argument [" . l:ele . "] description: ")
 		if(strlen(l:paramDesc) > 0)
 			let l:str = l:str . "\t" . l:paramDesc
 		endif
 		call add(l:writeText, l:str)
 	endfor
+	let l:funcReturn = input("Return value description: ")
+	let l:return =  g:ldoc_startFlagCommentTag . g:ldoc_flagReturn . l:funcReturn
+	call add(l:writeText, l:return)
 	call s:writeToPrevLine(l:writeText)
 	if(l:markJump == 1)
 		exec "normal " . (line(".") - len(l:writeText)) . "G$"
@@ -175,8 +180,9 @@ endfunction
 
 
 """""""""""""""""""""""""""""
-" 快捷键映射
+" Shortcuts' key mappings 
 """""""""""""""""""""""""""""
 command! -nargs=0 LdocM :call <SID>ldoc_moduleComment()
 command! -nargs=0 LdocT :call <SID>ldoc_typeComment()
 command! -nargs=0 LdocF :call <SID>ldoc_functionComment()
+
